@@ -26,5 +26,3 @@ Anggota Kelompok:
 Link Dataset: https://www.kaggle.com/datasets/jahnavipaliwal/video-game-reviews-and-ratings/data 
 
 Link Dashboard: https://tb-damin-si4708-k8.streamlit.app/
-
-Silakan tambahkan atau sesuaikan sesuai kebutuhan Anda.
