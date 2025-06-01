@@ -5,5 +5,3 @@ numpy
 pandas
 scikit-learn
 joblib
-plotly
-PIL

@@ -6,10 +6,9 @@ import joblib
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_curve, roc_auc_score
 import seaborn as sns
-from PIL import Image
 import pickle
 from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler # Diganti dari sklearn.discriminant_analysis
+from sklearn.preprocessing import StandardScaler, label_binarize 
 
 st.set_page_config(
     page_title="Analisis Model Segmentasi & Prediksi Rating Game",
@@ -288,6 +287,74 @@ def main():
             nb_model = None
 
         if nb_model is not None:
+            st.markdown("---")
+            st.subheader("Evaluasi Model Naive Bayes (dari notebook)")
+            # Anda bisa menambahkan gambar confusion matrix atau metrik lain di sini jika diinginkan
+            # Contoh: Menampilkan metrik yang sudah ada
+            st.markdown("""
+            **Akurasi Model (dari data test di notebook):** 0.8759
+
+            **Classification Report (dari data test di notebook):**
+            ```
+                        precision    recall  f1-score   support
+
+                    0       0.93      0.88      0.90      2500
+                    1       0.78      0.86      0.82      2430
+                    2       0.93      0.89      0.91      2437
+
+                accuracy                           0.88      7367
+            macro avg       0.88      0.88      0.88      7367
+            weighted avg       0.88      0.88      0.88      7367
+            ```
+
+            **Rata-rata ROC AUC (OVR Weighted) dari Cross-Validation:** 0.9819
+            """)
+            main_data = pd.read_csv('df_downsampled.csv')
+            y = main_data['user_rating_class']
+            X = main_data.drop(columns=['User Rating', 'user_rating_class'])
+
+            # Binarize label
+            y_bin = label_binarize(y, classes=[0, 1, 2])
+            n_classes = y_bin.shape[1]
+
+            # Split data (pakai random_state agar konsisten)
+            from sklearn.model_selection import train_test_split
+            X_train, X_test, y_train_bin, y_test_bin = train_test_split(X, y_bin, test_size=0.2, random_state=42)
+
+            # Hitung probabilitas prediksi
+            from sklearn.multiclass import OneVsRestClassifier
+            y_score = OneVsRestClassifier(nb_model).fit(X_train, y_train_bin).predict_proba(X_test)
+
+            # Hitung ROC per kelas
+            from sklearn.metrics import roc_curve, auc
+            fpr = dict()
+            tpr = dict()
+            roc_auc_per_classes = dict()
+            for i in range(n_classes):
+                fpr[i], tpr[i], _ = roc_curve(y_test_bin[:, i], y_score[:, i])
+                roc_auc_per_classes[i] = auc(fpr[i], tpr[i])
+
+            fig = plt.figure(figsize=(8,6))
+            colors = ['blue', 'green', 'red']
+            labels = ['Poor', 'Average', 'Good']
+
+            for i in range(n_classes):
+                plt.plot(fpr[i], tpr[i], color=colors[i], lw=2,
+                        label=f'ROC curve (class {labels[i]}) [AUC = {roc_auc_per_classes[i]:.2f}]')
+
+            plt.plot([0, 1], [0, 1], 'k--', lw=2)
+            plt.xlabel('False Positive Rate')
+            plt.ylabel('True Positive Rate')
+            plt.title('Multiclass ROC Curve')
+            plt.legend(loc='lower right')
+            plt.grid()
+
+            st.subheader("ROC Curve untuk Model Naive Bayes")
+            st.pyplot(fig)
+
+            st.markdown("---")
+
+
             st.sidebar.header("Input Fitur Prediksi Rating")
 
             # Definisikan opsi dan mapping untuk input supervised learning
@@ -307,7 +374,7 @@ def main():
 
             input_nb = {}
             input_nb['Age Group Targeted'] = st.sidebar.selectbox("Target Usia (Prediksi)", list(age_options_nb.keys()), key="nb_age")
-            input_nb['Price'] = st.sidebar.number_input("Harga (Prediksi)", min_value=0.0, value=30.0, step=0.01, key="nb_price")
+            input_nb['Price'] = st.sidebar.number_input("Harga (USD)", min_value=0.0, value=30.0, step=0.01, key="nb_price")
             input_nb['Platform'] = st.sidebar.selectbox("Platform (Prediksi)", list(platform_options_nb.keys()), key="nb_platform")
             input_nb['Requires Special Device'] = st.sidebar.selectbox("Membutuhkan Perangkat Khusus? (Prediksi)", list(yes_no_options_nb.keys()), key="nb_special_device")
             input_nb['Genre'] = st.sidebar.selectbox("Genre (Prediksi)", list(genre_options_nb.keys()), key="nb_genre")
@@ -356,36 +423,6 @@ def main():
 
                 except Exception as e:
                     st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
-
-            st.markdown("---")
-            st.subheader("Evaluasi Model Naive Bayes (dari notebook)")
-            # Anda bisa menambahkan gambar confusion matrix atau metrik lain di sini jika diinginkan
-            # Contoh: Menampilkan metrik yang sudah ada
-            st.markdown("""
-            **Akurasi Model (dari data test di notebook):** 0.8759
-
-            **Classification Report (dari data test di notebook):**
-            ```
-                        precision    recall  f1-score   support
-
-                    0       0.93      0.88      0.90      2500
-                    1       0.78      0.86      0.82      2430
-                    2       0.93      0.89      0.91      2437
-
-                accuracy                           0.88      7367
-            macro avg       0.88      0.88      0.88      7367
-            weighted avg       0.88      0.88      0.88      7367
-            ```
-
-            **Rata-rata ROC AUC (OVR Weighted) dari Cross-Validation:** 0.9819
-            """)
-
-            # Menampilkan gambar ROC Curve yang sudah dibuat
-            try:
-                roc_image = Image.open('multiclass_roc_curve.png') # Ganti dengan nama file gambar ROC Anda
-                st.image(roc_image, caption='Multiclass ROC Curve (dari notebook)')
-            except FileNotFoundError:
-                st.warning("Gambar Multiclass ROC Curve (multiclass_roc_curve.png) tidak ditemukan.")
 
 if __name__ == "__main__":
     main()
