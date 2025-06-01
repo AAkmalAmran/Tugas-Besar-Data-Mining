@@ -6,7 +6,6 @@ import joblib
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_curve, roc_auc_score
 import seaborn as sns
-import plotly.express as px
 from PIL import Image
 import pickle
 from sklearn.cluster import KMeans
@@ -77,16 +76,25 @@ def main():
         st.markdown('<h1 class="title">Pengelompokan Game Berdasarkan Segmentasi Pasar menggunakan Metode K-Means Clustering</h1>', unsafe_allow_html=True)
 
         st.subheader("Cluster Visualization") 
-        fig = px.scatter(
-            pca_2d_df, 
-            x='PCA1', 
-            y='PCA2', 
-            color='Cluster', 
-            title="Clusters Visualized with PCA", 
-            labels={'PCA1': 'PCA Component 1', 'PCA2': 'PCA Component 2'},
-            template='plotly'
+
+        fig, ax = plt.subplots(figsize=(20, 6))
+        palette = sns.color_palette("tab10", n_colors=len(pca_2d_df['Cluster'].unique()))
+        sns.scatterplot(
+            data=pca_2d_df,
+            x='PCA1',
+            y='PCA2',
+            hue='Cluster',
+            palette=palette,
+            ax=ax,
+            s=60,
+            edgecolor='k'
         )
-        st.plotly_chart(fig)
+        ax.set_title("Clusters Visualized on First Two PCA Components")
+        ax.set_xlabel("PCA Component 1")
+        ax.set_ylabel("PCA Component 2")
+        ax.legend(title="Cluster")
+        st.pyplot(fig)
+
 
         data_summary = {
             "Aspek": [
