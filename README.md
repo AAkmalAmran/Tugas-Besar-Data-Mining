@@ -17,7 +17,14 @@ Dashboard interaktif dibangun menggunakan Streamlit, sehingga pengguna dapat:
 - Mendapatkan interpretasi hasil prediksi dan rekomendasi strategi pemasaran.
 
 ---
+Anggota Kelompok:
+1. Ahmad Akmal Amran 102022300010
+2. Adinar Tri Panuntun 102022300174
+3. Muhammad Alvaro Shidqi Faozan 102022300096
+4. Raffi Akbar Firdaus 102022300186
+---
 Link Dataset: https://www.kaggle.com/datasets/jahnavipaliwal/video-game-reviews-and-ratings/data 
+
 Link Dashboard: https://tb-damin-si4708-k8.streamlit.app/
 
 Silakan tambahkan atau sesuaikan sesuai kebutuhan Anda.
